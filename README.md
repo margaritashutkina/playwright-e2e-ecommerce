@@ -24,3 +24,10 @@ npx playwright install
 npx playwright test
 npx playwright show-report
 ```
+
+## Notes
+Tests run against the live production storefront (https://eswatches.ae), not a
+local or staging build. Because of this, concurrency is intentionally limited
+(2 workers locally, 1 on CI) — too many parallel headless browsers trip
+Shopify's CDN rate limiting, which surfaces as a "There was a problem loading
+this website" error page and spurious failures.

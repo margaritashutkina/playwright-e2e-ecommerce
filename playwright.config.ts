@@ -19,14 +19,23 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* We test the live production storefront; too many parallel browsers trip
+     Shopify's CDN rate limiting. Cap concurrency (single worker on CI). */
+  workers: process.env.CI ? 1 : 2,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
+  /* Per-test budget. navigationTimeout only covers page.goto(); waitFor and
+     waitForURL are bounded by this, so lift it above the 30s default. */
+  timeout: 60000,
+  /* Give auto-retrying assertions more time — CI runners are slower than a laptop. */
+  expect: { timeout: 10000 },
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
     baseURL: 'https://eswatches.ae/',
+
+    /* The homepage autoplays video; allow more time for navigation on slow CI machines. */
+    navigationTimeout: 60000,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
