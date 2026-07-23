@@ -1,17 +1,20 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Main navigation', () => {
-    test('SHOP ALL leads to the full collection', async ({ page }) => {
-        await page.goto('/', { waitUntil: 'domcontentloaded' });
-        await page.getByRole('button', { name: 'Open menu' }).click();
-        await page.getByRole('link', { name: 'SHOP ALL', exact: true }).click();
-        await expect(page).toHaveURL(/collections\/all/);
-        // TODO(you): assert that at least one product card is visible
-    });
+  test('SHOP ALL leads to the full collection', async ({ page }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  const menuButton = page.getByRole('button', { name: 'Open menu' });
+  await menuButton.waitFor({ state: 'visible' });   // wait for readiness, not the network
+  await menuButton.click();
+  await page.getByRole('link', { name: 'SHOP ALL', exact: true }).click();
+  await expect(page).toHaveURL(/collections\/all/);
+});
 
     test('Datejust collection opens from the MODELS menu', async ({ page }) => {
         await page.goto('/', { waitUntil: 'domcontentloaded' });
-        await page.getByRole('button', { name: 'Open menu' }).click();
+        const menuButton = page.getByRole('button', { name: 'Open menu' });
+        await menuButton.waitFor({ state: 'visible' });
+        await menuButton.click();
         await page.getByRole('link', { name: 'MODELS ›' }).click();
 
         const datejust = page.getByRole('link', { name: 'Datejust', exact: true });
@@ -24,7 +27,9 @@ test.describe('Main navigation', () => {
 
     test('Contact page is reachable', async ({ page }) => {
         await page.goto('/', { waitUntil: 'domcontentloaded' });
-        await page.getByRole('button', { name: 'Open menu' }).click();
+        const menuButton = page.getByRole('button', { name: 'Open menu' });
+        await menuButton.waitFor({ state: 'visible' });
+        await menuButton.click();
         await page.getByRole('link', { name: 'CONTACT', exact: true }).click();
         await expect(page).toHaveURL(/pages\/contact/);
     });
