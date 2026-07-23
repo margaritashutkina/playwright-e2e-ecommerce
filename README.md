@@ -3,19 +3,32 @@
 Automated end-to-end tests for [ES Watches](https://eswatches.ae), a luxury
 watch resale e-commerce site I designed and built.
 
-## Test strategy
-Coverage focuses on critical user flows:
-- Homepage loads with product catalog visible
-- Navigation and catalog filtering
-- Product detail pages (price, photos, details)
-- Form validation (empty and invalid input)
-- Mobile viewport behavior
+## Coverage
+- Homepage loads with the correct title
+- Main navigation through the slide-out menu drawer: Shop All, collection
+  submenu (MODELS → Datejust), and Contact
+- Collection page renders product cards with name, price and image
+- Price format validation — asserts prices match `Dhs. <number>`, so a price
+  that fails to load is caught rather than passing as "element exists"
+- Product detail dialog opens with its content sections
 
-Selectors target stable `data-testid` attributes rather than text,
-so tests survive copy and styling changes.
+## Approach
+- Selectors target roles and accessible names rather than translated copy or
+  styling classes, so tests survive content and design changes
+- Explicit waits on element state (`waitFor`, `toBeVisible`) instead of fixed
+  sleeps — tests wait for conditions, not arbitrary durations
+- Runs across Chromium, Firefox and WebKit
+
+## Notes on the test environment
+Tests run against the **live production storefront** — there is no staging
+environment. GitHub-hosted runners share IP ranges that Shopify's bot
+protection rate-limits, so CI runs can fail on page load with Shopify's
+"There was a problem loading this website" page even when the full suite
+passes locally. Worker count is capped to reduce this. Local runs are the
+source of truth; a staging or preview environment would be the proper fix.
 
 ## Tech
-Playwright · TypeScript · GitHub Actions (tests run on every push)
+Playwright · TypeScript · GitHub Actions
 
 ## Run locally
 ```
@@ -24,10 +37,3 @@ npx playwright install
 npx playwright test
 npx playwright show-report
 ```
-
-## Notes
-Tests run against the live production storefront (https://eswatches.ae), not a
-local or staging build. Because of this, concurrency is intentionally limited
-(2 workers locally, 1 on CI) — too many parallel headless browsers trip
-Shopify's CDN rate limiting, which surfaces as a "There was a problem loading
-this website" error page and spurious failures.
