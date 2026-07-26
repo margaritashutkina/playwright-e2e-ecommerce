@@ -1,24 +1,52 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Product catalogue', () => {
-  test('collection page renders product cards with name, price and image', async ({ page }) => {
-    await page.goto('/collections/all', { waitUntil: 'domcontentloaded' });
+const COLLECTION = '/collections/all';
 
-    const firstCard = page.getByRole('img', { name: /rolex|oyster|datejust/i }).first();
+test.describe('Product page navigation', () => {
+
+  test('clicking a product card navigates to its own product page', async ({ page }) => {
+    await page.goto(COLLECTION);
+
+    const firstCard = page.locator('.watch-card').first();
     await expect(firstCard).toBeVisible();
 
-    // price is present AND formatted as money — catches a price that fails to load
-    await expect(page.getByText(/Dhs\.\s?[\d,]+/).first()).toBeVisible();
+    const href = await firstCard.getAttribute('href');
+    expect(href).toContain('/products/');
 
-    await expect(page.getByRole('button', { name: 'VIEW DETAILS' }).first()).toBeVisible();
+    const cardTitle = (await firstCard.locator('.card-model').textContent())?.trim();
+
+    await firstCard.click();
+
+    await expect(page).toHaveURL(/\/products\//);
+    await expect(page.locator('h1.product-title')).toContainText(cardTitle ?? '');
   });
 
-  test('VIEW DETAILS opens the product detail dialog', async ({ page }) => {
-    await page.goto('/collections/all', { waitUntil: 'domcontentloaded' });
+  test('product page loads with title, price and inquire button', async ({ page }) => {
+    await page.goto(COLLECTION);
+    await page.locator('.watch-card').first().click();
+    await expect(page).toHaveURL(/\/products\//);
 
-    await page.getByRole('button', { name: 'VIEW DETAILS' }).first().click();
+    await expect(page.locator('h1.product-title')).toBeVisible();
 
-    await expect(page.getByRole('dialog')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Payment Methods +' })).toBeVisible();
+    const price = page.locator('.product-price');
+    await expect(price).toBeVisible();
+    await expect(price).toHaveText(/Dhs\.\s?[\d,]+/);
+
+    const inquire = page.locator('a.product-inquire');
+    await expect(inquire).toBeVisible();
+    await expect(inquire).toHaveAttribute('href', /wa\.me/);
   });
+
+  test('a product URL is directly shareable (loads on its own)', async ({ page }) => {
+    await page.goto(COLLECTION);
+    const firstCard = page.locator('.watch-card').first();
+    const href = await firstCard.getAttribute('href');
+    expect(href).toBeTruthy();
+
+    await page.goto(href!);
+
+    await expect(page.locator('h1.product-title')).toBeVisible();
+    await expect(page.locator('.product-price')).toBeVisible();
+  });
+
 });
